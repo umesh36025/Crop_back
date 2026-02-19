@@ -296,6 +296,7 @@ class UserAdmin(DjangoUserAdmin):
     search_fields   = ('phone_number', 'username', 'email', 'created_by__phone_number', 'created_by__email', 'industry__name')
     ordering        = ('-date_joined',)
     filter_horizontal = ('groups', 'user_permissions',)
+    list_select_related = ('role', 'industry', 'created_by')
     
     def get_created_by_email(self, obj):
         """Display the email of the user who created this user"""
@@ -306,14 +307,14 @@ class UserAdmin(DjangoUserAdmin):
     get_created_by_email.admin_order_field = 'created_by__email'
     
     def get_queryset(self, request):
-        """Filter users by industry for non-superusers"""
+        """Filter users by industry for non-superusers. Uses select_related to avoid N+1 queries."""
         qs = super().get_queryset(request)
         # Global Admin sees all users
         if request.user.is_superuser:
-            return qs
+            return qs.select_related('role', 'industry', 'created_by')
         # Use multi-tenant utility to get accessible users
         from .multi_tenant_utils import get_accessible_users
-        return get_accessible_users(request.user)
+        return get_accessible_users(request.user).select_related('role', 'industry', 'created_by')
     
     def save_model(self, request, obj, form, change):
         """Automatically set created_by to the current user when creating new users"""

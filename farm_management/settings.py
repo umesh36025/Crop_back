@@ -312,6 +312,24 @@ MAILGUN_FROM_EMAIL = os.environ.get('MAILGUN_FROM_EMAIL', DEFAULT_FROM_EMAIL)
 # Frontend URL for password reset links
 FRONTEND_URL = os.environ.get('FRONTEND_URL', 'http://localhost:3000')
 
+# Cache (Redis when REDIS_URL set, else local memory)
+_redis_url = os.environ.get('REDIS_URL', '').strip()
+if _redis_url:
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.redis.RedisCache',
+            'LOCATION': _redis_url,
+        }
+    }
+    SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
+    SESSION_CACHE_ALIAS = 'default'
+else:
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        }
+    }
+
 # LEAFLET_CONFIG 
 LEAFLET_CONFIG = {
     'DEFAULT_CENTER': (28.6139, 77.2090),  # Coordinates for New Delhi, India

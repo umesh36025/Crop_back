@@ -358,6 +358,9 @@ if _redis_url:
             'LOCATION': _redis_url,
         }
     }
+    # Store sessions in Redis to reduce DB load on every request (avoids DB hit per request)
+    SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
+    SESSION_CACHE_ALIAS = 'default'
 else:
     CACHES = {
         'default': {

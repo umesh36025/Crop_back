@@ -34,4 +34,7 @@ services:
         value: "True"
       - key: FRONTEND_URL
         value: "https://your-frontend-app.onrender.com"
+      # Redis (optional): Set in Render Dashboard for faster sessions and caching
+      - key: REDIS_URL
+        sync: false
     healthCheckPath: /api/health/

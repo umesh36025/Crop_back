@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.db.models import Count, Max, Q
 from leaflet.admin import LeafletGeoAdmin
 from users.admin import IndustryFilteredAdmin
 from django import forms
@@ -73,18 +74,22 @@ class CropTypeAdmin(IndustryFilteredAdmin):
     planting_method_display.admin_order_field = 'planting_method'
     
     def plantation_date_display(self, obj):
-        """Display the most recent plantation date from related farms"""
-        # Get the most recent farm with a plantation date for this crop type
-        most_recent_farm = obj.farm_set.filter(plantation_date__isnull=False).order_by('-plantation_date').first()
-        if most_recent_farm:
-            most_recent = most_recent_farm.plantation_date
-            # Count total farms with this crop type
-            total_farms = obj.farm_set.count()
-            if total_farms > 1:
-                return f"{most_recent} (most recent of {total_farms} farms)"
+        """Display the most recent plantation date from related farms (uses annotated fields to avoid N+1)."""
+        most_recent = getattr(obj, '_most_recent_plantation_date', None)
+        farm_count = getattr(obj, '_farm_count', 0)
+        if most_recent:
+            if farm_count > 1:
+                return f"{most_recent} (most recent of {farm_count} farms)"
             return str(most_recent)
         return '-'
     plantation_date_display.short_description = 'Plantation Date'
+
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        return qs.annotate(
+            _most_recent_plantation_date=Max('farm_set__plantation_date', filter=Q(farm_set__plantation_date__isnull=False)),
+            _farm_count=Count('farm_set', distinct=True),
+        )
 
 
 @admin.register(PlantationType)
@@ -204,6 +209,8 @@ class FarmAdmin(admin.ModelAdmin):
         'created_by',
     )
 
+    list_select_related = ('farm_owner', 'industry', 'soil_type', 'crop_type', 'created_by')
+
     search_fields = (
         'farm_owner__username',
         'farm_uid',
@@ -265,6 +272,7 @@ class FarmAdmin(admin.ModelAdmin):
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)
+        qs = qs.select_related('farm_owner', 'industry', 'soil_type', 'crop_type', 'created_by')
         if request.user.is_superuser:
             return qs
         if hasattr(request.user, 'industry') and request.user.industry:
@@ -300,6 +308,7 @@ class PlotAdmin(LeafletGeoAdmin):
     )
     list_filter = ('industry', 'village', 'taluka', 'district', 'state', 'country', 'created_by')
     search_fields = ('gat_number', 'plot_number', 'created_by__email', 'industry__name')
+    list_select_related = ('industry', 'created_by')
 
     fieldsets = (
         (None, {
@@ -324,6 +333,7 @@ class PlotAdmin(LeafletGeoAdmin):
     
     def get_queryset(self, request):
         qs = super().get_queryset(request)
+        qs = qs.select_related('industry', 'created_by')
         if request.user.is_superuser:
             return qs
         if hasattr(request.user, 'industry') and request.user.industry:

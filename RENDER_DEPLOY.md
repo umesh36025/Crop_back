@@ -81,3 +81,27 @@ python manage.py createsuperuser
 ```
 
 Then log in at `https://<your-service>.onrender.com/admin/`.
+
+## 8. Performance after bulk upload (admin lag)
+
+If the admin is slow after bulk-uploading many users/plots (e.g. 700+ farmers):
+
+### Redis (recommended)
+
+1. Add a **Redis** service on Render (or use Redis Cloud).
+2. Set `REDIS_URL` in your web service environment (e.g. `redis://...`).
+3. Sessions will move from DB to Redis, reducing DB load on every request.
+4. **Note:** Existing sessions are invalidated once you switch; users will need to log in again.
+
+### Verify optimizations
+
+Run in Render Shell to measure User list performance:
+
+```bash
+python manage.py time_admin_user_list --limit 100
+```
+
+### Already applied (performance only; no response/behavior change)
+
+- **UserAdmin**, **PlotAdmin**, **FarmAdmin**: `list_select_related` to avoid N+1 queries.
+- **CropTypeAdmin**: Annotations instead of per-row queries for plantation dates.
