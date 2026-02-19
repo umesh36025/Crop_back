@@ -119,6 +119,7 @@ WSGI_APPLICATION = 'farm_management.wsgi.application'
 def _parse_database_url(url: str) -> dict:
     """Parse PostgreSQL DATABASE_URL into Django DATABASES config."""
     p = urlparse(url)
+    opts = {'sslmode': 'require'} if 'sslmode=require' in (p.query or '') else {}
     return {
         'ENGINE': 'django.contrib.gis.db.backends.postgis',
         'NAME': (p.path or '/').lstrip('/') or 'neondb',
@@ -126,7 +127,8 @@ def _parse_database_url(url: str) -> dict:
         'PASSWORD': unquote(p.password) if p.password else '',
         'HOST': p.hostname or 'localhost',
         'PORT': str(p.port) if p.port else '5432',
-        'OPTIONS': {'sslmode': 'require'} if 'sslmode=require' in (p.query or '') else {},
+        'OPTIONS': opts,
+        'DISABLE_SERVER_SIDE_CURSORS': True,  # Required for Neon/pgBouncer connection pooling
     }
 
 _database_url = os.environ.get('DATABASE_URL')
@@ -141,6 +143,7 @@ else:
             'PASSWORD': os.environ.get('DB_PASSWORD', 'postgres'),
             'HOST': os.environ.get('DB_HOST', 'localhost'),
             'PORT': os.environ.get('DB_PORT', '5432'),
+            'DISABLE_SERVER_SIDE_CURSORS': True,
         }
     }
 
