@@ -17,6 +17,7 @@ def root_view(request):
         "version": "1.0",
         "endpoints": {
             "health": "/api/health/",
+            "metrics": "/metrics/",
             "api_docs": "/swagger/",
             "admin": "/admin/",
             "users": "/api/users/",

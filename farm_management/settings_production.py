@@ -69,6 +69,7 @@ INSTALLED_APPS = [
     'drf_yasg',
     'django_filters',
     'leaflet',
+    'django_prometheus',  # Prometheus metrics
     
     # Local apps
     'users',
@@ -84,6 +85,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    'django_prometheus.middleware.PrometheusBeforeMiddleware',  # Prometheus - must be first
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',  # For static files in production
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -93,6 +95,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'django_prometheus.middleware.PrometheusAfterMiddleware',  # Prometheus - must be last
 ]
 
 ROOT_URLCONF = 'farm_management.urls'
