@@ -49,6 +49,8 @@ django-redis==5.4.0
 
 # Monitoring and logging
 sentry-sdk==1.40.0
+django-prometheus==2.3.1
+prometheus-client==0.20.0
 
 # Security
 django-ratelimit==4.1.0
