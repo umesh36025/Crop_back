@@ -43,9 +43,6 @@ urlpatterns = [
     path('', root_view, name='root'),
     path('admin/', admin.site.urls),
     
-    # Prometheus metrics endpoint
-    path('metrics/', include('django_prometheus.urls')),
-    
     # Health check endpoint
     path('api/health/', health_check, name='health-check'),
     
@@ -63,6 +60,9 @@ urlpatterns = [
 
     # API Documentation
     path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
+    
+    # Prometheus metrics endpoint (must be after other patterns)
+    path('', include('django_prometheus.urls')),
 ]
 
 if settings.DEBUG:
