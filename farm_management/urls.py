@@ -42,6 +42,9 @@ urlpatterns = [
     path('', root_view, name='root'),
     path('admin/', admin.site.urls),
     
+    # Prometheus metrics endpoint
+    path('metrics/', include('django_prometheus.urls')),
+    
     # Health check endpoint
     path('api/health/', health_check, name='health-check'),
     
