@@ -114,6 +114,7 @@ INSTALLED_APPS = [
     'industries',
 ]
 
+
 MIDDLEWARE = [
     'django_prometheus.middleware.PrometheusBeforeMiddleware',  # Prometheus - must be first
     'django.middleware.security.SecurityMiddleware',
